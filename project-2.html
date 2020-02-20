@@ -1,0 +1,550 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Project 2 - kvs</title>
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div id="sidebar-scrollbox" class="sidebar-scrollbox">
+                <ol class="chapter"><li class="expanded "><a href="project-2.html" class="active"><strong aria-hidden="true">1.</strong> Project 2</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">kvs</h1>
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#project-2-log-structured-file-io" id="project-2-log-structured-file-io">Project 2: Log-structured file I/O</a></h1>
+<h2><a class="header" href="#日志文件io" id="日志文件io">日志文件I/O</a></h2>
+<h3><a class="header" href="#目标" id="目标">目标</a></h3>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+鲁棒的错误处理</li>
+<li><input disabled="" type="checkbox" checked=""/>
+序列化/反序列化</li>
+<li><input disabled="" type="checkbox" checked=""/>
+用标准文件API向磁盘写入日志</li>
+<li><input disabled="" type="checkbox" checked=""/>
+内存和磁盘中键值对的一致性</li>
+<li><input disabled="" type="checkbox" checked=""/>
+日志压缩</li>
+</ul>
+<h2><a class="header" href="#intro" id="intro">Intro</a></h2>
+<ul>
+<li>bitcask储存算法的简化版
+<ul>
+<li>简洁</li>
+<li>高效</li>
+</ul>
+</li>
+<li>WAL日志
+<ul>
+<li>初始化时读出日志，内存中重建</li>
+<li>写入时写入磁盘中写入键值对，内存中写入键和偏移量</li>
+<li>日志压缩</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#interface" id="interface">Interface</a></h2>
+<ul>
+<li>命令行
+<ul>
+<li>无状态
+<ul>
+<li>加载索引</li>
+<li>执行命令</li>
+<li>退出</li>
+</ul>
+</li>
+<li><code>kvs set &lt;KEY&gt; &lt;VALUE&gt;</code>
+<ul>
+<li>创建包含key和value的set日志条目</li>
+<li>序列化命令并追加写入日志</li>
+<li>成功则返回0</li>
+<li>发生错误输出错误信息并以非零返回值退出</li>
+</ul>
+</li>
+<li><code>kvs get &lt;KEY&gt;</code>
+<ul>
+<li>遍历日志重建内存索引</li>
+<li>检查key是否存在</li>
+<li>不存在则输出<code>Key not found</code>并以非0返回值退出</li>
+<li>成功则读出并输出日志中该key对应的日志条目</li>
+<li>返回值0</li>
+</ul>
+</li>
+<li><code>kvs rm &lt;KEY&gt;</code>
+<ul>
+<li>遍历日志重建内存索引</li>
+<li>检查key是否存在</li>
+<li>不存在则输出<code>Key not found</code>并以非0返回值退出</li>
+<li>序列化命令并追加写入日志</li>
+<li>返回值0</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>API
+<ul>
+<li>有状态
+<ul>
+<li>加载索引</li>
+<li>执行多次API调用</li>
+<li><code>drop</code></li>
+</ul>
+</li>
+<li><code>KvStore::set(&amp;mut self, key: String, value: String) -&gt; Result&lt;()&gt;</code>
+<ul>
+<li>没有成功写入时返回错误</li>
+<li>日志中写入<code>set</code></li>
+<li>内存中保存log pointer</li>
+</ul>
+</li>
+<li><code>KvStore::get(&amp;mut self, key: String) -&gt; Result&lt;Option&lt;String&gt;&gt;</code>
+<ul>
+<li>键不存在返回<code>None</code></li>
+<li>没有成功读取时返回错误</li>
+</ul>
+</li>
+<li><code>KvStore::remove(&amp;mut self, key: String) -&gt; Result&lt;()&gt;</code>
+<ul>
+<li>键不存在/没有成功删除时返回错误</li>
+<li>日志中写入<code>rm</code></li>
+<li>内存中删除键值对</li>
+</ul>
+</li>
+<li><code>KvStore::open(path: impl Into&lt;PathBuf&gt;) -&gt; Result&lt;KvStore&gt;</code>
+<ul>
+<li>打开给定目录下的<code>KvStore</code></li>
+<li>遍历日志重建索引</li>
+</ul>
+</li>
+<li>压缩
+<ul>
+<li>当未压缩键值对超过阀值</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#错误处理" id="错误处理">错误处理</a></h2>
+<ul>
+<li>
+<p>combinators</p>
+<ul>
+<li><code>ok_or(err) -&gt; Result</code>
+<ul>
+<li><code>Option -&gt; Result</code></li>
+</ul>
+</li>
+<li></li>
+</ul>
+</li>
+<li>
+<p>问题</p>
+<ul>
+<li>多种错误的合成</li>
+<li>追踪溯源</li>
+</ul>
+</li>
+<li>
+<p>不要用字符串</p>
+<ul>
+<li>clutter your code</li>
+<li>信息丢失</li>
+</ul>
+</li>
+<li>
+<p><a href="http://doc.rust-lang.org/std/error/trait.Error.html"><code>pub trait Error: Debug + Display {}</code></a></p>
+<ul>
+<li>使用<code>Display</code> trait转换成字符串输出</li>
+<li><code>fn source(&amp;self) -&gt; Option&lt;&amp;(dyn Error + 'static)&gt;</code></li>
+</ul>
+</li>
+<li>
+<p><code>impl From&lt;S&gt; for T {}</code></p>
+<ul>
+<li>S =&gt; T</li>
+<li><code>t = s.into()</code></li>
+</ul>
+</li>
+<li>
+<p><code>std::io::Error</code></p>
+<ul>
+<li>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>pub struct Error {
+    repr: Repr,
+}
+enum Repr {
+    Os(i32),
+    Simple(ErrorKind),
+    Custom(Box&lt;Custom&gt;),
+}
+struct Custom {
+    kind: ErrorKind,
+    error: Box&lt;dyn error::Error + Send + Sync&gt;,
+}
+pub enum ErrorKind {
+    // ...
+}
+<span class="boring">}
+</span></code></pre></pre>
+</li>
+<li>
+<p>Simple: 只知道类型</p>
+</li>
+<li>
+<p>Custom: 知道底层错误类型和底层错误指针</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#结构" id="结构">结构</a></h2>
+<ul>
+<li>Log
+<ul>
+<li>Entry
+<ul>
+<li>一个条目</li>
+</ul>
+</li>
+<li>Segment
+<ul>
+<li>一个日志文件</li>
+<li>包含多个条目</li>
+<li><code>pub fn open(path: impl Into&lt;PathBuf&gt;) -&gt; Result&lt;Self&gt;</code>
+<ul>
+<li>给定路径指向文件</li>
+<li>设置文件后缀为<code>log</code></li>
+<li>新建一个读者一个写者</li>
+<li>读者可以随意seek</li>
+<li>写者只能append</li>
+<li>初始写偏移量为文件末尾</li>
+</ul>
+</li>
+<li><code>pub fn set(&amp;mut self, key: String, value: String) -&gt; Result&lt;Pointer&gt;</code>
+<ul>
+<li>获取当前写偏移量及文件名</li>
+<li>生成log pointer</li>
+<li>生成log entry</li>
+<li>将entry序列化到内存</li>
+<li>将序列化结果写入硬盘</li>
+<li>写偏移量 += sered entry len</li>
+<li>更新hint</li>
+</ul>
+</li>
+<li><code>pub fn get(&amp;mut self, key: &amp;String) -&gt; Result&lt;Option&lt;String&gt;&gt;</code>
+<ul>
+<li>检查hint中有无键</li>
+<li>无则返回</li>
+<li>将writer中的buf flush到硬盘</li>
+<li>从hint给的offset开始反序列化</li>
+</ul>
+</li>
+<li><code>pub fn remove(&amp;mut self, key: &amp;String) -&gt; Result&lt;Pointer&gt;</code>
+<ul>
+<li>不管给定键是否存在这个segment中都要写入
+<ul>
+<li>可能在前面某个segment</li>
+</ul>
+</li>
+<li>余下逻辑同set</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Hint
+<ul>
+<li>某个Segment的索引</li>
+<li>统计信息
+<ul>
+<li>某key全部的写操作数个数</li>
+</ul>
+</li>
+<li>成员
+<ul>
+<li>路径</li>
+<li>偏移量表</li>
+<li>修改计数表</li>
+</ul>
+</li>
+<li><code>pub fn open(path: impl Into&lt;PathBuf&gt;) -&gt; Result&lt;Self&gt;</code>
+<ul>
+<li>给定路径指向文件</li>
+<li>设置文件后缀为<code>hint</code></li>
+<li>打开文件</li>
+<li>背靠背读入两个表</li>
+</ul>
+</li>
+<li><code>pub fn empty(path: impl Into&lt;PathBuf&gt;) -&gt; Self</code>
+<ul>
+<li>给定路径指向文件</li>
+<li>设置文件后缀为<code>hint</code></li>
+<li>新建两个空表</li>
+</ul>
+</li>
+<li><code>pub fn set(&amp;mut self, key: String, offset: u64)</code>
+<ul>
+<li>设置对应键值对的位置</li>
+<li>不存在则新建</li>
+<li>修改计数+1</li>
+</ul>
+</li>
+<li><code>pub fn get(&amp;self, key: &amp;String) -&gt; Option&lt;u64&gt;</code>
+<ul>
+<li>获取偏移量表中的值</li>
+</ul>
+</li>
+<li><code>pub fn remove(&amp;mut self, key: &amp;String)</code>
+<ul>
+<li>删除偏移量表中键值对</li>
+<li>修改计数+1</li>
+</ul>
+</li>
+<li><code>fn drop(&amp;mut self)</code>
+<ul>
+<li>新建/覆盖原hint file</li>
+<li>背靠背写入两个表</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Pointer
+<ul>
+<li>日志指针</li>
+<li>文件名+偏移量</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>KvStore
+<ul>
+<li>MemTable
+<ul>
+<li>全部的内存索引</li>
+</ul>
+</li>
+<li>active segment
+<ul>
+<li>当前活动日志文件</li>
+</ul>
+</li>
+<li>open时重建
+<ul>
+<li>打开一个新的next segment</li>
+<li>记录读取过的全部文件</li>
+<li>便读取边记录统计信息</li>
+<li>读取完毕超过阀值时压缩
+<ul>
+<li>小文件个数</li>
+<li>文件大小</li>
+<li>某key写操作数</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#日志压缩" id="日志压缩">日志压缩</a></h2>
+<ul>
+<li>扫描所有的segment文件</li>
+<li>flush当前segment的write buffer</li>
+<li>新建一个KvStore实例</li>
+<li>依次读取现有KvStore实例MemTable中的key</li>
+<li>对每个key读取value，写入新KvStore打开的segment中</li>
+<li>segment中k/v pair数超过限制时再分segment</li>
+<li>最后交换两个KvStore的MemTable</li>
+<li>drop掉新建实例</li>
+<li>删除原来的文件</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        
+        
+        <script type="text/javascript">
+            window.playpen_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
