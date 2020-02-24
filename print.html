@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div id="sidebar-scrollbox" class="sidebar-scrollbox">
-                <ol class="chapter"><li class="expanded "><a href="project-2.html"><strong aria-hidden="true">1.</strong> Project 2</a></li></ol>
+                <ol class="chapter"><li class="expanded "><a href="project-2.html"><strong aria-hidden="true">1.</strong> Project 2</a></li><li class="expanded "><a href="project-3.html"><strong aria-hidden="true">2.</strong> Project 3</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -496,6 +496,304 @@ pub enum ErrorKind {
 <li>最后交换两个KvStore的MemTable</li>
 <li>drop掉新建实例</li>
 <li>删除原来的文件</li>
+</ul>
+<h1><a class="header" href="#project-3-synchronous-client-server-networking" id="project-3-synchronous-client-server-networking">Project 3: Synchronous client-server networking</a></h1>
+<h2><a class="header" href="#building-blocks" id="building-blocks">Building Blocks</a></h2>
+<ul>
+<li><code>log</code> crate
+<ul>
+<li>只是一个trait
+<ul>
+<li>需要附加一个其他logging底层实现crate</li>
+</ul>
+</li>
+<li>用户定义一个logger以及这个类型的全局变量/backend</li>
+<li>可以在编译期确定哪些log level会被处理进binary</li>
+<li>默认针对嵌入式
+<ul>
+<li>不用std</li>
+<li>可以开启</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>slog crate
+<ul>
+<li>是一个生态</li>
+<li>不一定只用一个全局后端</li>
+<li>可读性好</li>
+<li>logger
+<ul>
+<li>写入日志的入口</li>
+</ul>
+</li>
+<li>Drain
+<ul>
+<li>日志的管道</li>
+<li>树形结构化</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3><a class="header" href="#redis-protocol" id="redis-protocol">Redis Protocol</a></h3>
+<ul>
+<li>RESP
+<ul>
+<li>REdis Serializable Protocol</li>
+<li>用于C/S通讯</li>
+</ul>
+</li>
+<li>binary-safe
+<ul>
+<li>命令前面加了长度</li>
+</ul>
+</li>
+<li>用于面向流的链接
+<ul>
+<li>TCP</li>
+<li>Unix sockets</li>
+</ul>
+</li>
+<li>请求/应答模型
+<ul>
+<li>接受命令</li>
+<li>送回响应</li>
+<li>特例
+<ul>
+<li>支持流水线式请求处理</li>
+<li>支持订阅/推送机制</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>实际上是序列化协议
+<ul>
+<li>数据类型按首字节区分</li>
+<li><code>+</code>字符串
+<ul>
+<li>串中不能包含CR或者LF</li>
+<li><code>+OK\r\n</code></li>
+</ul>
+</li>
+<li><code>-</code>错误
+<ul>
+<li>实际上就是错误信息/字符串</li>
+<li><code>-Error message\r\n</code>
+<ul>
+<li><code>-ERR unknown command 'foobar'</code></li>
+<li><code>-WRONGTYPE Operation against a key holding the wrong kind of value</code></li>
+</ul>
+</li>
+<li>客户端应将其当作异常处理</li>
+<li>第一个word是错误类型
+<ul>
+<li>只是习惯不是标准</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>:</code>整数
+<ul>
+<li><code>:0\r\n</code></li>
+<li><code>:1000\r\n</code></li>
+</ul>
+</li>
+<li><code>$</code>批量字符串
+<ul>
+<li>最长512MB</li>
+<li><code>$+长度+CRLF+数据+CRLF</code></li>
+<li><code>$6\r\nfoobar\r\n</code></li>
+<li><code>$0\r\n\r\n</code></li>
+<li>Null Bulk String
+<ul>
+<li><code>$-1\r\n</code> </li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>*</code>数组
+<ul>
+<li><code>*+长度+CRLF+RESP*长度个</code></li>
+<li><code>*3\r\n$3\r\nfoo\r\n$-1\r\n$3\r\nbar\r\n</code>
+<ul>
+<li><code>[&quot;foo&quot;, null, &quot;bar&quot;]</code></li>
+</ul>
+</li>
+<li><code>*5\r\n:1\r\n:2\r\n:3\r\n:4\r\n$6\r\nfoobar\r\n</code>
+<ul>
+<li><code>[1, 2, 3, 4, &quot;foobar&quot;]</code></li>
+</ul>
+</li>
+<li><code>*-1\r\n</code>
+<ul>
+<li><code>null</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>命令和HTTP请求一样以CRLF结束</li>
+<li>交互
+<ul>
+<li>客户端发送批量字符串组成的RESP数组
+<ul>
+<li><code>*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n</code></li>
+<li><code>LLEN mylist</code></li>
+</ul>
+</li>
+<li>服务器随意回应</li>
+<li>Inline mode
+<ul>
+<li>相当于直接接受命令行命令</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>写parser
+<ul>
+<li>无lookahead</li>
+</ul>
+</li>
+</ul>
+<h3><a class="header" href="#重识serde" id="重识serde">重识serde</a></h3>
+<ul>
+<li>
+<p><s>之前一直认为serde就是parser，不同的serializer/deserializer就是不同的写法</s></p>
+</li>
+<li>
+<blockquote>
+<p>During serialization, the <a href="https://docs.serde.rs/serde/trait.Serialize.html"><code>Serialize</code></a> trait maps a Rust data structure into Serde's <a href="https://serde.rs/data-model.html">data model</a> and the <a href="https://docs.serde.rs/serde/ser/trait.Serializer.html"><code>Serializer</code></a> trait maps the data model into the output format. During deserialization, the <a href="https://docs.serde.rs/serde/trait.Deserializer.html"><code>Deserializer</code></a> maps the input data into Serde's data model and the <a href="https://docs.serde.rs/serde/trait.Deserialize.html"><code>Deserialize</code></a> and <a href="https://docs.serde.rs/serde/de/trait.Visitor.html"><code>Visitor</code></a> traits map the data model into the resulting data structure.</p>
+</blockquote>
+</li>
+<li>
+<p>serde实际上只规定了一些标准类型</p>
+</li>
+<li>
+<p>这些类型作为所有rust中可以出现的类型和目标表示形式的桥梁</p>
+</li>
+<li>
+<p>serde保证rust所有类型都可以用serde中的类型表示/组合出来</p>
+</li>
+<li>
+<p>那么实现serer/der时只需要支持这29种serde类型就相当于支持了rust中所有的类型</p>
+</li>
+<li>
+<p>有关生命周期</p>
+<ul>
+<li><code>&lt;'de, T&gt; where T: Deserialize&lt;'de&gt;</code>
+<ul>
+<li>caller决定生命周期</li>
+<li>来源数据由caller提供</li>
+</ul>
+</li>
+<li><code> where T: DeserializeOwned</code>
+<ul>
+<li>callee决定生命周期</li>
+<li>返回前用做de的数据就可能要被drop了</li>
+<li>T拥有de的全部数据</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3><a class="header" href="#resp-serde" id="resp-serde">RESP serde</a></h3>
+<h4><a class="header" href="#data-model-mapping" id="data-model-mapping">data model mapping</a></h4>
+<ul>
+<li>
+<p>14 primitive types</p>
+</li>
+<li>
+<p>bool -&gt; 0/1</p>
+</li>
+<li>
+<p>i8, i16, i32, i64 -&gt; i64</p>
+</li>
+<li>
+<p>u8, u16, u32, u64 -&gt; u64</p>
+</li>
+<li>
+<p>f32, f64 -&gt; string</p>
+</li>
+<li>
+<p>char -&gt; string</p>
+</li>
+<li>
+<p>string/byte array -&gt; simple/bulk string</p>
+</li>
+<li>
+<p>option -&gt; array</p>
+</li>
+<li>
+<p>unit/unit_struct -&gt; null/&quot;$-1\r\n&quot;</p>
+</li>
+<li>
+<p>unit_variant -&gt; string of variant name</p>
+</li>
+<li>
+<p>newtype_struct -&gt; value of wrapped type</p>
+<ul>
+<li>struct Millimeters(u8)</li>
+</ul>
+</li>
+<li>
+<p>newtype_variant -&gt; [variant, value]</p>
+<ul>
+<li>E::N in enum E { N(u8) }</li>
+</ul>
+</li>
+<li>
+<p>seq -&gt; array / unknown size would cause error</p>
+</li>
+<li>
+<p>tuple/tuple_struct -&gt; array</p>
+</li>
+<li>
+<p>map/struct -&gt; [[k0,v0], [k1,v1], ...]</p>
+<ul>
+<li>struct S { r: u8, g: u8, b: u8 }</li>
+</ul>
+</li>
+<li>
+<p>tuple_variant -&gt; [variant, [field0, field1, ...]]</p>
+</li>
+<li>
+<p>struct_variant -&gt; [variant, [[k0,v0], [k1,v1], ...]]</p>
+</li>
+</ul>
+<h4><a class="header" href="#parser-就不写了" id="parser-就不写了">parser 就不写了</a></h4>
+<h3><a class="header" href="#perform-evaluation" id="perform-evaluation">Perform evaluation</a></h3>
+<ul>
+<li>不确定性来源
+<ul>
+<li>JIT</li>
+<li>调度</li>
+<li>GC</li>
+<li>中断</li>
+</ul>
+</li>
+<li>观测误差
+<ul>
+<li>系统误差
+<ul>
+<li>应由实验者避免及消除</li>
+</ul>
+</li>
+<li>随机误差
+<ul>
+<li>不可预测</li>
+<li>建模估计</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#project" id="project">Project</a></h2>
+<ul>
+<li>测试时发现hint的rebuild没写，之前以segment当作最小单元，这个当然不对</li>
+<li>每次写log都要flush，有待优化</li>
+<li>bench要的时间长的离谱？？？</li>
 </ul>
 
                     </main>

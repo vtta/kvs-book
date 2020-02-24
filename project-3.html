@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Project 2 - kvs</title>
+        <title>Project 3 - kvs</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div id="sidebar-scrollbox" class="sidebar-scrollbox">
-                <ol class="chapter"><li class="expanded "><a href="project-2.html"><strong aria-hidden="true">1.</strong> Project 2</a></li><li class="expanded "><a href="project-3.html"><strong aria-hidden="true">2.</strong> Project 3</a></li></ol>
+                <ol class="chapter"><li class="expanded "><a href="project-2.html"><strong aria-hidden="true">1.</strong> Project 2</a></li><li class="expanded "><a href="project-3.html" class="active"><strong aria-hidden="true">2.</strong> Project 3</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -148,352 +148,303 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#project-2-log-structured-file-io" id="project-2-log-structured-file-io">Project 2: Log-structured file I/O</a></h1>
-<h2><a class="header" href="#日志文件io" id="日志文件io">日志文件I/O</a></h2>
-<h3><a class="header" href="#目标" id="目标">目标</a></h3>
+                        <h1><a class="header" href="#project-3-synchronous-client-server-networking" id="project-3-synchronous-client-server-networking">Project 3: Synchronous client-server networking</a></h1>
+<h2><a class="header" href="#building-blocks" id="building-blocks">Building Blocks</a></h2>
 <ul>
-<li><input disabled="" type="checkbox" checked=""/>
-鲁棒的错误处理</li>
-<li><input disabled="" type="checkbox" checked=""/>
-序列化/反序列化</li>
-<li><input disabled="" type="checkbox" checked=""/>
-用标准文件API向磁盘写入日志</li>
-<li><input disabled="" type="checkbox" checked=""/>
-内存和磁盘中键值对的一致性</li>
-<li><input disabled="" type="checkbox" checked=""/>
-日志压缩</li>
-</ul>
-<h2><a class="header" href="#intro" id="intro">Intro</a></h2>
+<li><code>log</code> crate
 <ul>
-<li>bitcask储存算法的简化版
+<li>只是一个trait
 <ul>
-<li>简洁</li>
-<li>高效</li>
+<li>需要附加一个其他logging底层实现crate</li>
 </ul>
 </li>
-<li>WAL日志
+<li>用户定义一个logger以及这个类型的全局变量/backend</li>
+<li>可以在编译期确定哪些log level会被处理进binary</li>
+<li>默认针对嵌入式
 <ul>
-<li>初始化时读出日志，内存中重建</li>
-<li>写入时写入磁盘中写入键值对，内存中写入键和偏移量</li>
-<li>日志压缩</li>
-</ul>
-</li>
-</ul>
-<h2><a class="header" href="#interface" id="interface">Interface</a></h2>
-<ul>
-<li>命令行
-<ul>
-<li>无状态
-<ul>
-<li>加载索引</li>
-<li>执行命令</li>
-<li>退出</li>
-</ul>
-</li>
-<li><code>kvs set &lt;KEY&gt; &lt;VALUE&gt;</code>
-<ul>
-<li>创建包含key和value的set日志条目</li>
-<li>序列化命令并追加写入日志</li>
-<li>成功则返回0</li>
-<li>发生错误输出错误信息并以非零返回值退出</li>
-</ul>
-</li>
-<li><code>kvs get &lt;KEY&gt;</code>
-<ul>
-<li>遍历日志重建内存索引</li>
-<li>检查key是否存在</li>
-<li>不存在则输出<code>Key not found</code>并以非0返回值退出</li>
-<li>成功则读出并输出日志中该key对应的日志条目</li>
-<li>返回值0</li>
-</ul>
-</li>
-<li><code>kvs rm &lt;KEY&gt;</code>
-<ul>
-<li>遍历日志重建内存索引</li>
-<li>检查key是否存在</li>
-<li>不存在则输出<code>Key not found</code>并以非0返回值退出</li>
-<li>序列化命令并追加写入日志</li>
-<li>返回值0</li>
+<li>不用std</li>
+<li>可以开启</li>
 </ul>
 </li>
 </ul>
 </li>
-<li>API
+<li>slog crate
 <ul>
-<li>有状态
+<li>是一个生态</li>
+<li>不一定只用一个全局后端</li>
+<li>可读性好</li>
+<li>logger
 <ul>
-<li>加载索引</li>
-<li>执行多次API调用</li>
-<li><code>drop</code></li>
+<li>写入日志的入口</li>
 </ul>
 </li>
-<li><code>KvStore::set(&amp;mut self, key: String, value: String) -&gt; Result&lt;()&gt;</code>
+<li>Drain
 <ul>
-<li>没有成功写入时返回错误</li>
-<li>日志中写入<code>set</code></li>
-<li>内存中保存log pointer</li>
-</ul>
-</li>
-<li><code>KvStore::get(&amp;mut self, key: String) -&gt; Result&lt;Option&lt;String&gt;&gt;</code>
-<ul>
-<li>键不存在返回<code>None</code></li>
-<li>没有成功读取时返回错误</li>
-</ul>
-</li>
-<li><code>KvStore::remove(&amp;mut self, key: String) -&gt; Result&lt;()&gt;</code>
-<ul>
-<li>键不存在/没有成功删除时返回错误</li>
-<li>日志中写入<code>rm</code></li>
-<li>内存中删除键值对</li>
-</ul>
-</li>
-<li><code>KvStore::open(path: impl Into&lt;PathBuf&gt;) -&gt; Result&lt;KvStore&gt;</code>
-<ul>
-<li>打开给定目录下的<code>KvStore</code></li>
-<li>遍历日志重建索引</li>
-</ul>
-</li>
-<li>压缩
-<ul>
-<li>当未压缩键值对超过阀值</li>
+<li>日志的管道</li>
+<li>树形结构化</li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#错误处理" id="错误处理">错误处理</a></h2>
+<h3><a class="header" href="#redis-protocol" id="redis-protocol">Redis Protocol</a></h3>
+<ul>
+<li>RESP
+<ul>
+<li>REdis Serializable Protocol</li>
+<li>用于C/S通讯</li>
+</ul>
+</li>
+<li>binary-safe
+<ul>
+<li>命令前面加了长度</li>
+</ul>
+</li>
+<li>用于面向流的链接
+<ul>
+<li>TCP</li>
+<li>Unix sockets</li>
+</ul>
+</li>
+<li>请求/应答模型
+<ul>
+<li>接受命令</li>
+<li>送回响应</li>
+<li>特例
+<ul>
+<li>支持流水线式请求处理</li>
+<li>支持订阅/推送机制</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>实际上是序列化协议
+<ul>
+<li>数据类型按首字节区分</li>
+<li><code>+</code>字符串
+<ul>
+<li>串中不能包含CR或者LF</li>
+<li><code>+OK\r\n</code></li>
+</ul>
+</li>
+<li><code>-</code>错误
+<ul>
+<li>实际上就是错误信息/字符串</li>
+<li><code>-Error message\r\n</code>
+<ul>
+<li><code>-ERR unknown command 'foobar'</code></li>
+<li><code>-WRONGTYPE Operation against a key holding the wrong kind of value</code></li>
+</ul>
+</li>
+<li>客户端应将其当作异常处理</li>
+<li>第一个word是错误类型
+<ul>
+<li>只是习惯不是标准</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>:</code>整数
+<ul>
+<li><code>:0\r\n</code></li>
+<li><code>:1000\r\n</code></li>
+</ul>
+</li>
+<li><code>$</code>批量字符串
+<ul>
+<li>最长512MB</li>
+<li><code>$+长度+CRLF+数据+CRLF</code></li>
+<li><code>$6\r\nfoobar\r\n</code></li>
+<li><code>$0\r\n\r\n</code></li>
+<li>Null Bulk String
+<ul>
+<li><code>$-1\r\n</code> </li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>*</code>数组
+<ul>
+<li><code>*+长度+CRLF+RESP*长度个</code></li>
+<li><code>*3\r\n$3\r\nfoo\r\n$-1\r\n$3\r\nbar\r\n</code>
+<ul>
+<li><code>[&quot;foo&quot;, null, &quot;bar&quot;]</code></li>
+</ul>
+</li>
+<li><code>*5\r\n:1\r\n:2\r\n:3\r\n:4\r\n$6\r\nfoobar\r\n</code>
+<ul>
+<li><code>[1, 2, 3, 4, &quot;foobar&quot;]</code></li>
+</ul>
+</li>
+<li><code>*-1\r\n</code>
+<ul>
+<li><code>null</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>命令和HTTP请求一样以CRLF结束</li>
+<li>交互
+<ul>
+<li>客户端发送批量字符串组成的RESP数组
+<ul>
+<li><code>*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n</code></li>
+<li><code>LLEN mylist</code></li>
+</ul>
+</li>
+<li>服务器随意回应</li>
+<li>Inline mode
+<ul>
+<li>相当于直接接受命令行命令</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>写parser
+<ul>
+<li>无lookahead</li>
+</ul>
+</li>
+</ul>
+<h3><a class="header" href="#重识serde" id="重识serde">重识serde</a></h3>
 <ul>
 <li>
-<p>combinators</p>
+<p><s>之前一直认为serde就是parser，不同的serializer/deserializer就是不同的写法</s></p>
+</li>
+<li>
+<blockquote>
+<p>During serialization, the <a href="https://docs.serde.rs/serde/trait.Serialize.html"><code>Serialize</code></a> trait maps a Rust data structure into Serde's <a href="https://serde.rs/data-model.html">data model</a> and the <a href="https://docs.serde.rs/serde/ser/trait.Serializer.html"><code>Serializer</code></a> trait maps the data model into the output format. During deserialization, the <a href="https://docs.serde.rs/serde/trait.Deserializer.html"><code>Deserializer</code></a> maps the input data into Serde's data model and the <a href="https://docs.serde.rs/serde/trait.Deserialize.html"><code>Deserialize</code></a> and <a href="https://docs.serde.rs/serde/de/trait.Visitor.html"><code>Visitor</code></a> traits map the data model into the resulting data structure.</p>
+</blockquote>
+</li>
+<li>
+<p>serde实际上只规定了一些标准类型</p>
+</li>
+<li>
+<p>这些类型作为所有rust中可以出现的类型和目标表示形式的桥梁</p>
+</li>
+<li>
+<p>serde保证rust所有类型都可以用serde中的类型表示/组合出来</p>
+</li>
+<li>
+<p>那么实现serer/der时只需要支持这29种serde类型就相当于支持了rust中所有的类型</p>
+</li>
+<li>
+<p>有关生命周期</p>
 <ul>
-<li><code>ok_or(err) -&gt; Result</code>
+<li><code>&lt;'de, T&gt; where T: Deserialize&lt;'de&gt;</code>
 <ul>
-<li><code>Option -&gt; Result</code></li>
+<li>caller决定生命周期</li>
+<li>来源数据由caller提供</li>
 </ul>
 </li>
-<li></li>
+<li><code> where T: DeserializeOwned</code>
+<ul>
+<li>callee决定生命周期</li>
+<li>返回前用做de的数据就可能要被drop了</li>
+<li>T拥有de的全部数据</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3><a class="header" href="#resp-serde" id="resp-serde">RESP serde</a></h3>
+<h4><a class="header" href="#data-model-mapping" id="data-model-mapping">data model mapping</a></h4>
+<ul>
+<li>
+<p>14 primitive types</p>
+</li>
+<li>
+<p>bool -&gt; 0/1</p>
+</li>
+<li>
+<p>i8, i16, i32, i64 -&gt; i64</p>
+</li>
+<li>
+<p>u8, u16, u32, u64 -&gt; u64</p>
+</li>
+<li>
+<p>f32, f64 -&gt; string</p>
+</li>
+<li>
+<p>char -&gt; string</p>
+</li>
+<li>
+<p>string/byte array -&gt; simple/bulk string</p>
+</li>
+<li>
+<p>option -&gt; array</p>
+</li>
+<li>
+<p>unit/unit_struct -&gt; null/&quot;$-1\r\n&quot;</p>
+</li>
+<li>
+<p>unit_variant -&gt; string of variant name</p>
+</li>
+<li>
+<p>newtype_struct -&gt; value of wrapped type</p>
+<ul>
+<li>struct Millimeters(u8)</li>
 </ul>
 </li>
 <li>
-<p>问题</p>
+<p>newtype_variant -&gt; [variant, value]</p>
 <ul>
-<li>多种错误的合成</li>
-<li>追踪溯源</li>
+<li>E::N in enum E { N(u8) }</li>
 </ul>
 </li>
 <li>
-<p>不要用字符串</p>
+<p>seq -&gt; array / unknown size would cause error</p>
+</li>
+<li>
+<p>tuple/tuple_struct -&gt; array</p>
+</li>
+<li>
+<p>map/struct -&gt; [[k0,v0], [k1,v1], ...]</p>
 <ul>
-<li>clutter your code</li>
-<li>信息丢失</li>
+<li>struct S { r: u8, g: u8, b: u8 }</li>
 </ul>
 </li>
 <li>
-<p><a href="http://doc.rust-lang.org/std/error/trait.Error.html"><code>pub trait Error: Debug + Display {}</code></a></p>
-<ul>
-<li>使用<code>Display</code> trait转换成字符串输出</li>
-<li><code>fn source(&amp;self) -&gt; Option&lt;&amp;(dyn Error + 'static)&gt;</code></li>
-</ul>
+<p>tuple_variant -&gt; [variant, [field0, field1, ...]]</p>
 </li>
 <li>
-<p><code>impl From&lt;S&gt; for T {}</code></p>
-<ul>
-<li>S =&gt; T</li>
-<li><code>t = s.into()</code></li>
-</ul>
-</li>
-<li>
-<p><code>std::io::Error</code></p>
-<ul>
-<li>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
-</span><span class="boring">fn main() {
-</span>pub struct Error {
-    repr: Repr,
-}
-enum Repr {
-    Os(i32),
-    Simple(ErrorKind),
-    Custom(Box&lt;Custom&gt;),
-}
-struct Custom {
-    kind: ErrorKind,
-    error: Box&lt;dyn error::Error + Send + Sync&gt;,
-}
-pub enum ErrorKind {
-    // ...
-}
-<span class="boring">}
-</span></code></pre></pre>
-</li>
-<li>
-<p>Simple: 只知道类型</p>
-</li>
-<li>
-<p>Custom: 知道底层错误类型和底层错误指针</p>
+<p>struct_variant -&gt; [variant, [[k0,v0], [k1,v1], ...]]</p>
 </li>
 </ul>
-</li>
-</ul>
-<h2><a class="header" href="#结构" id="结构">结构</a></h2>
+<h4><a class="header" href="#parser-就不写了" id="parser-就不写了">parser 就不写了</a></h4>
+<h3><a class="header" href="#perform-evaluation" id="perform-evaluation">Perform evaluation</a></h3>
 <ul>
-<li>Log
+<li>不确定性来源
 <ul>
-<li>Entry
-<ul>
-<li>一个条目</li>
-</ul>
-</li>
-<li>Segment
-<ul>
-<li>一个日志文件</li>
-<li>包含多个条目</li>
-<li><code>pub fn open(path: impl Into&lt;PathBuf&gt;) -&gt; Result&lt;Self&gt;</code>
-<ul>
-<li>给定路径指向文件</li>
-<li>设置文件后缀为<code>log</code></li>
-<li>新建一个读者一个写者</li>
-<li>读者可以随意seek</li>
-<li>写者只能append</li>
-<li>初始写偏移量为文件末尾</li>
+<li>JIT</li>
+<li>调度</li>
+<li>GC</li>
+<li>中断</li>
 </ul>
 </li>
-<li><code>pub fn set(&amp;mut self, key: String, value: String) -&gt; Result&lt;Pointer&gt;</code>
+<li>观测误差
 <ul>
-<li>获取当前写偏移量及文件名</li>
-<li>生成log pointer</li>
-<li>生成log entry</li>
-<li>将entry序列化到内存</li>
-<li>将序列化结果写入硬盘</li>
-<li>写偏移量 += sered entry len</li>
-<li>更新hint</li>
+<li>系统误差
+<ul>
+<li>应由实验者避免及消除</li>
 </ul>
 </li>
-<li><code>pub fn get(&amp;mut self, key: &amp;String) -&gt; Result&lt;Option&lt;String&gt;&gt;</code>
+<li>随机误差
 <ul>
-<li>检查hint中有无键</li>
-<li>无则返回</li>
-<li>将writer中的buf flush到硬盘</li>
-<li>从hint给的offset开始反序列化</li>
-</ul>
-</li>
-<li><code>pub fn remove(&amp;mut self, key: &amp;String) -&gt; Result&lt;Pointer&gt;</code>
-<ul>
-<li>不管给定键是否存在这个segment中都要写入
-<ul>
-<li>可能在前面某个segment</li>
-</ul>
-</li>
-<li>余下逻辑同set</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Hint
-<ul>
-<li>某个Segment的索引</li>
-<li>统计信息
-<ul>
-<li>某key全部的写操作数个数</li>
-</ul>
-</li>
-<li>成员
-<ul>
-<li>路径</li>
-<li>偏移量表</li>
-<li>修改计数表</li>
-</ul>
-</li>
-<li><code>pub fn open(path: impl Into&lt;PathBuf&gt;) -&gt; Result&lt;Self&gt;</code>
-<ul>
-<li>给定路径指向文件</li>
-<li>设置文件后缀为<code>hint</code></li>
-<li>打开文件</li>
-<li>背靠背读入两个表</li>
-</ul>
-</li>
-<li><code>pub fn empty(path: impl Into&lt;PathBuf&gt;) -&gt; Self</code>
-<ul>
-<li>给定路径指向文件</li>
-<li>设置文件后缀为<code>hint</code></li>
-<li>新建两个空表</li>
-</ul>
-</li>
-<li><code>pub fn set(&amp;mut self, key: String, offset: u64)</code>
-<ul>
-<li>设置对应键值对的位置</li>
-<li>不存在则新建</li>
-<li>修改计数+1</li>
-</ul>
-</li>
-<li><code>pub fn get(&amp;self, key: &amp;String) -&gt; Option&lt;u64&gt;</code>
-<ul>
-<li>获取偏移量表中的值</li>
-</ul>
-</li>
-<li><code>pub fn remove(&amp;mut self, key: &amp;String)</code>
-<ul>
-<li>删除偏移量表中键值对</li>
-<li>修改计数+1</li>
-</ul>
-</li>
-<li><code>fn drop(&amp;mut self)</code>
-<ul>
-<li>新建/覆盖原hint file</li>
-<li>背靠背写入两个表</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Pointer
-<ul>
-<li>日志指针</li>
-<li>文件名+偏移量</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>KvStore
-<ul>
-<li>MemTable
-<ul>
-<li>全部的内存索引</li>
-</ul>
-</li>
-<li>active segment
-<ul>
-<li>当前活动日志文件</li>
-</ul>
-</li>
-<li>open时重建
-<ul>
-<li>打开一个新的next segment</li>
-<li>记录读取过的全部文件</li>
-<li>便读取边记录统计信息</li>
-<li>读取完毕超过阀值时压缩
-<ul>
-<li>小文件个数</li>
-<li>文件大小</li>
-<li>某key写操作数</li>
+<li>不可预测</li>
+<li>建模估计</li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
-<h2><a class="header" href="#日志压缩" id="日志压缩">日志压缩</a></h2>
+<h2><a class="header" href="#project" id="project">Project</a></h2>
 <ul>
-<li>扫描所有的segment文件</li>
-<li>flush当前segment的write buffer</li>
-<li>新建一个KvStore实例</li>
-<li>依次读取现有KvStore实例MemTable中的key</li>
-<li>对每个key读取value，写入新KvStore打开的segment中</li>
-<li>segment中k/v pair数超过限制时再分segment</li>
-<li>最后交换两个KvStore的MemTable</li>
-<li>drop掉新建实例</li>
-<li>删除原来的文件</li>
+<li>测试时发现hint的rebuild没写，之前以segment当作最小单元，这个当然不对</li>
+<li>每次写log都要flush，有待优化</li>
+<li>bench要的时间长的离谱？？？</li>
 </ul>
 
                     </main>
@@ -501,11 +452,11 @@ pub enum ErrorKind {
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-
-                        
-                            <a rel="next" href="project-3.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="project-2.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+                        
+
                         
 
                         <div style="clear: both"></div>
@@ -515,11 +466,11 @@ pub enum ErrorKind {
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-
-                
-                    <a href="project-3.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a href="project-2.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+                
+
                 
             </nav>
 
